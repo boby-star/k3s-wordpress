@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata: 
+  name: redis
+  namespace: apps
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      apps: redis
+    template:
+      metadata:
+        labels:
+          app: redis
+      spec:
+        containers:
+          - name: redis
+            image: redis:7-alpine
+            ports:
+              - containerPort: 6379
+                name: redis
+            args: ["--save", "60", "1", "--appendonly", "yes"]
+            resources:
+              requests:
+                cpu: 50m
+                memory: 128Mi
+              limits:
+                cpu: 300m
+                memory: 512Mi
+---
+apiVersion: v1
+kind: Service
+metadata: 
+  name: redis
+  namespace: redis
+spec:
+  selector:
+    app: redis
+  ports:
+    - name: redis
+      port: 6379
+      targetPort: 6379
