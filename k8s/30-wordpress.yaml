@@ -25,13 +25,12 @@ spec:
       labels:
         app: wordpress
     spec:
+      securityContext:
+          fsGroup: 33
       volumes:
         - name: wp-data
           persistentVolumeClaim:
             claimName: wp-data-pvc
-      spec:
-        securityContext:
-          fsGroup: 33
       initContainers:
         - name: wait-for-mariadb
           image: busybox:1.36
