@@ -42,7 +42,20 @@ spec:
                 sleep 2;
               done
               echo "MariaDB is reachable."
-
+        - name: wp-seed
+          image: wordpress:6-php8.2-apache
+          command:
+            - sh
+            - -c
+            - |
+              set -ex
+              if [ ! -f /var/www/html/wp-settings.php ]; then
+                echo "Копіювання ядра WP в PVC..."
+                cp -a /usr/src/wordpress/. /var/www/html/
+              fi
+          volumeMounts:
+            - name: wp-data
+              mountPath: /var/www/html
         - name: wp-bootstrap
           image: wordpress:cli-php8.2
           env:
@@ -95,23 +108,12 @@ spec:
             - sh
             - -c
             - |
-              set -e
-
-              echo "Waiting for WordPress files to exist..."
-              # WordPress image copies core into /var/www/html on first start; тут ми на PVC,
-              # тому якщо директорія пуста — підкинемо core вручну
-              if [ ! -f /var/www/html/wp-settings.php ]; then
-                echo "WP core not found in PVC, copying..."
-                cp -r /usr/src/wordpress/* /var/www/html/
-              fi
-
+              set -ex
               cd /var/www/html
 
-              echo "Checking if WP is installed..."
               if wp core is-installed --allow-root; then
                 echo "WP already installed."
               else
-                echo "Installing WordPress..."
                 wp core install \
                   --url="$WP_SITE_URL" \
                   --title="$WP_SITE_TITLE" \
@@ -122,22 +124,16 @@ spec:
                   --allow-root
               fi
 
-              echo "Installing and enabling Redis Object Cache plugin..."
               if wp plugin is-installed redis-cache --allow-root; then
                 echo "redis-cache already installed."
               else
                 wp plugin install redis-cache --activate --allow-root
               fi
 
-              echo "Configuring wp-config.php for Redis..."
               wp config set WP_REDIS_HOST redis --type=constant --allow-root
               wp config set WP_REDIS_PORT 6379 --type=constant --allow-root
-
-              echo "Enabling Redis cache (if plugin provides command)..."
               wp redis enable --allow-root || true
-
-              echo "Bootstrap done."
-
+              echo "Bootstrap done"
       containers:
         - name: wordpress
           image: wordpress:6-php8.2-apache
