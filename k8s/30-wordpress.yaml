@@ -111,6 +111,23 @@ spec:
               set -ex
               cd /var/www/html
 
+              if [ ! -f wp-settings.php ] then;
+                echo "wp-settings.php не знайдено"
+                ls -la
+                exit 1
+              fi
+
+              if [ ! -f wp-config.php ]; then
+                echo "Створення wp-config.php..."
+                wp config create \
+                  --dbname="$WORDPRESS_DB_NAME" \
+                  --dbuser="$WORDPRESS_DB_USER" \
+                  --dbpass="$WORDPRESS_DB_PASSWORD" \
+                  --dbhost="$WORDPRESS_DB_HOST" \
+                  --skip-check \
+                  --allow-root
+              fi
+
               if wp core is-installed --allow-root; then
                 echo "WP already installed."
               else
