@@ -113,7 +113,7 @@ spec:
               set -ex
               cd /var/www/html
 
-              if [ ! -f wp-settings.php ] then;
+              if [ ! -f wp-settings.php ]; then
                 echo "wp-settings.php не знайдено"
                 ls -la
                 exit 1
